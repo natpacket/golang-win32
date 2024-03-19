@@ -10,6 +10,9 @@ import (
 	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/golang-win32/win32"
 )
+
+type ListMode uintptr
+
 const (
     LIST_MODULES_DEFAULT ListMode = 0x0  //查看默认的模块
     LIST_MODULES_32BIT            = 0x01 //查看32-bit的模块
