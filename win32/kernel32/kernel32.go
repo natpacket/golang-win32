@@ -10,7 +10,12 @@ import (
 	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/golang-win32/win32"
 )
-
+const (
+    LIST_MODULES_DEFAULT ListMode = 0x0  //查看默认的模块
+    LIST_MODULES_32BIT            = 0x01 //查看32-bit的模块
+    LIST_MODULES_64BIT            = 0x02 //查看64-bit的模块
+    LIST_MODULES_ALL              = 0x03 //查看所有的模块
+)
 // CloseHandle Win32 API wrapper
 func CloseHandle(hObject win32.HANDLE) error {
 	r1, _, lastErr := closeHandle.Call(
@@ -56,6 +61,23 @@ func EnumProcessModules(hProcess win32.HANDLE) ([]win32.HANDLE, error) {
 		uintptr(unsafe.Pointer(&hMods)),
 		uintptr(len(hMods)),
 		uintptr(unsafe.Pointer(&needed)))
+	if err.(syscall.Errno) == 0 {
+		// Number of hModules returned
+		n := (uintptr(needed) / unsafe.Sizeof(win32.HANDLE(0)))
+		return hMods[:n], nil
+	}
+	return hMods[:], err
+}
+
+func EnumProcessModulesEx(hProcess win32.HANDLE,mode ListMode ) ([]win32.HANDLE, error) {
+	var hMods [1024]win32.HANDLE
+	needed := win32.DWORD(0)
+	_, _, err := k32EnumProcessModulesEx.Call(
+		uintptr(hProcess),
+		uintptr(unsafe.Pointer(&hMods)),
+		uintptr(len(hMods)),
+		uintptr(unsafe.Pointer(&needed)),
+		uintptr(mode))
 	if err.(syscall.Errno) == 0 {
 		// Number of hModules returned
 		n := (uintptr(needed) / unsafe.Sizeof(win32.HANDLE(0)))
